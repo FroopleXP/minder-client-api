@@ -103,6 +103,43 @@ function ensureAuthenticationAPI(req, res, next) {
     }
 }
 
+// Home route
+app.get('/', function(req, res) {
+	// Checking if the User is logged in
+	if (req.isAuthenticated()) {
+		res.render("home", { title: "Minder Client - Home", user: req.user});
+	} else if (!res.isAuthenticated()) {
+		res.redirect("login");
+	}
+});
+
+// Login route
+app.get('/login', function(req, res) {
+	// Checking if the User is logged in
+	if (req.isAuthenticated()) {
+		res.redirect('/');
+	} else if (!res.isAuthenticated()) {
+		res.render("login", { title: "Minder Client - Login" });
+	}	
+});
+
+app.post('/login', function(req, res, next) {
+    passport.authenticate('local', function(err, user, info) {
+        if (err) {
+            return next(err);
+        } else if (!user) {
+            return res.render("login", { title: "Failed to login!", err_msg: info.message });
+        } else {
+            req.login(user, function(err) {
+                if (err) {
+                    return next(err);
+                }
+                return res.redirect("/");
+            });
+        }
+    })(req, res, next);
+});
+
 // Starting app
 app.listen(port, function() {
 	console.log("Client API started: http://127.0.0.1:" + port + "/");
