@@ -7,12 +7,6 @@ var moment = require('moment');
 var db = require('./mysql_conn.js');
 var crypto = require('crypto');
 
-// CSURF CSRF Protection
-var csurf = require('csurf');
-
-// Moment.js
-moment().format();
-
 // Cleaning tools
 var xssFilters = require('xss-filters'),
     validator = require('validator');
@@ -37,7 +31,7 @@ app.use("/views", express.static(__dirname + '/views'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(expressSession({ secret: 'casiodaemon',  resave: true, saveUninitialized: true }));
+app.use(expressSession({ secret: 'Th12i24p4InK1li3R',  resave: true, saveUninitialized: true }));
 
 // Setting up Passport
 app.use(passport.initialize());
