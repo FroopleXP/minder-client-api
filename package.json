@@ -1,0 +1,19 @@
+{
+  "name": "minder-client-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FroopleXP/minder-client-api.git"
+  },
+  "author": "Connor Edwards",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FroopleXP/minder-client-api/issues"
+  },
+  "homepage": "https://github.com/FroopleXP/minder-client-api#readme"
+}
