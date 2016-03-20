@@ -3,7 +3,6 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var expressSession = require('express-session');
-var moment = require('moment');
 var db = require('./mysql_conn.js');
 var crypto = require('crypto');
 
@@ -18,7 +17,7 @@ var vali_str_opt = {
 }
 
 var app = express();
-var port = process.env.PORT || 80;
+var port = process.env.PORT || 1337;
 
 // Requiring passport
 var passport = require('passport');
@@ -38,7 +37,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 passport.use(new passportLocal.Strategy(function(email, password, done) {
-    db.query('SELECT * FROM admin_users WHERE admin_users.email = ?', email, function(err, rows, fields) {
+    db.query('SELECT * FROM std_users WHERE std_users.stu_email = ?', email, function(err, rows, fields) {
         if (err) { return done(err); } // There was an error
         if (rows.length < 1) { // No user
             return done(null, false, {message: 'User not found!'});
@@ -75,7 +74,7 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(id, done) {
-    db.query('SELECT * FROM admin_users WHERE admin_users.id = ?', id, function(err, rows, fields) {
+    db.query('SELECT * FROM std_users WHERE std_users.stu_id = ?', id, function(err, rows, fields) {
         if (err) { return done(err); } // There was an error
         if (rows.length < 1) { // No user
             done(null, null);
@@ -103,3 +102,8 @@ function ensureAuthenticationAPI(req, res, next) {
         res.sendStatus(403);
     }
 }
+
+// Starting app
+app.listen(port, function() {
+	console.log("Client API started: http://127.0.0.1:" + port + "/");
+});
