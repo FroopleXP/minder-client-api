@@ -35,7 +35,7 @@ app.use(expressSession({
     resave: true, 
     saveUninitialized: true,
     cookie: {
-        maxAge: 60000
+        maxAge: 2592000000 * 12
     },
     rolling: true 
 }));
@@ -297,6 +297,41 @@ app.post('/register', function(req, res) {
 		});
 
 	}
+
+});
+
+app.get('/tasks', function(req, res) {
+
+	// Getting the User ID
+	var user_id = req.user.id;
+
+	// Getting info about the user
+	db.query('select tasks.id "task_id", tasks.task_name "task_name", tasks.task_desc "task_desc", classes.class_name "class_name", classes.id "class_id" from tasks, classes where tasks.class_id = classes.id and tasks.class_id in (select classes.id from classes where classes.id in (select relations.class_id from relations where relations.student_id in (select users.id from users where users.username like ?)))', username, function(err, result) {
+
+		if (result.length > 0) {
+
+			// Looping through data
+			for (i = 0; i < result.length; i++) {
+				resp[i] = {
+					'class_name': result[i].class_name,
+					'task_name': result[i].task_name,
+					'task_desc': result[i].task_desc
+				}
+			}
+
+			res.json({
+				status: 1,
+				tasks: resp
+			});
+
+		} else {
+			res.json({
+				status: 0,
+				warning: 'No tasks to get!'
+			});
+		}
+
+	});
 
 });
 
