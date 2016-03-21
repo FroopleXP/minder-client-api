@@ -30,7 +30,15 @@ app.use("/views", express.static(__dirname + '/views'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(expressSession({ secret: 'Th12i24p4InK1li3R',  resave: true, saveUninitialized: true }));
+app.use(expressSession({ 
+	secret: 'Th12i24p4InK1li3R',  
+    resave: true, 
+    saveUninitialized: true,
+    cookie: {
+        maxAge: 60000
+    },
+    rolling: true 
+}));
 
 // Setting up Passport
 app.use(passport.initialize());
@@ -44,8 +52,8 @@ passport.use(new passportLocal.Strategy(function(email, password, done) {
         } else if (rows.length > 0) { // There's a user
 
             // Getting the data
-            var email_db = rows[0]['email'],
-                password_db = rows[0]['password'];
+            var email_db = rows[0]['stu_email'],
+                password_db = rows[0]['stu_pass'];
 
             // Checking the credentials
             if (email !== email_db) { // Email is not correct
@@ -55,12 +63,12 @@ passport.use(new passportLocal.Strategy(function(email, password, done) {
             } else {
                 // Validation success, create the user model
                 var user_model = {
-                    id: rows[0]['id'],
-                    firstname: rows[0]['fname'],
-                    lastname: rows[0]['lname'],
-                    full_name: rows[0]['full_name'],
-                    email: rows[0]['email'],
-                    estab_id: rows[0]['estab_belongs_to']
+                    id: rows[0]['stu_id'],
+                    firstname: rows[0]['stu_fname'],
+                    lastname: rows[0]['stu_lname'],
+                    full_name: rows[0]['stu_full_name'],
+                    email: rows[0]['stu_email'],
+                    estab_id: rows[0]['stu_estab']
                 }
                 // Returning
                 return done(null, user_model);
@@ -81,12 +89,12 @@ passport.deserializeUser(function(id, done) {
         } else if (rows.length > 0) { // There's a user
             // Validation success, create the user model
             var user_model = {
-                id: rows[0]['id'],
-                firstname: rows[0]['fname'],
-                lastname: rows[0]['lname'],
-                full_name: rows[0]['full_name'],
-                email: rows[0]['email'],
-                estab_id: rows[0]['estab_belongs_to']
+                id: rows[0]['stu_id'],
+                firstname: rows[0]['stu_fname'],
+                lastname: rows[0]['stu_lname'],
+                full_name: rows[0]['stu_full_name'],
+                email: rows[0]['stu_email'],
+                estab_id: rows[0]['stu_estab']
             }
             // Returning
             done(null, user_model);
@@ -108,7 +116,7 @@ app.get('/', function(req, res) {
 	// Checking if the User is logged in
 	if (req.isAuthenticated()) {
 		res.render("home", { title: "Minder Client - Home", user: req.user});
-	} else if (!res.isAuthenticated()) {
+	} else if (!req.isAuthenticated()) {
 		res.redirect("login");
 	}
 });
@@ -118,7 +126,7 @@ app.get('/login', function(req, res) {
 	// Checking if the User is logged in
 	if (req.isAuthenticated()) {
 		res.redirect('/');
-	} else if (!res.isAuthenticated()) {
+	} else if (!req.isAuthenticated()) {
 		res.render("login", { title: "Minder Client - Login" });
 	}	
 });
@@ -128,7 +136,7 @@ app.post('/login', function(req, res, next) {
         if (err) {
             return next(err);
         } else if (!user) {
-            return res.render("login", { title: "Failed to login!", err_msg: info.message });
+            return res.render("login", { title: "Minder Client - Failed to login!", err_msg: info.message });
         } else {
             req.login(user, function(err) {
                 if (err) {
@@ -138,6 +146,158 @@ app.post('/login', function(req, res, next) {
             });
         }
     })(req, res, next);
+});
+
+app.get('/estabs', function(req, res) {
+
+	// Getting the establishments
+	db.query("SELECT estab_id, estab_name FROM establishments", function(err, rows, fields) {
+		// Checking for errors
+		if (err) throw err;
+		// Sending back the data
+		res.json(rows);
+	});
+
+});
+
+// Register Route
+app.get('/register', function(req, res) {
+
+	// Checking if the User is logged in
+	if (!req.isAuthenticated()) {
+
+		// Rendering the Register page
+		res.render("register", { title: "Minder Client - Registration" });
+
+	} else if (req.isAuthenticated()) {
+
+		// Redirecting back to home page
+		res.redirect("home");
+
+	}
+});
+
+app.post('/register', function(req, res) {
+
+	// Getting the data from the form
+	var firstname = xssFilters.inHTMLData(req.body.firstname),
+		lastname = xssFilters.inHTMLData(req.body.lastname),
+		email = xssFilters.inHTMLData(req.body.email),
+		password = xssFilters.inHTMLData(req.body.password),
+		password_conf = xssFilters.inHTMLData(req.body.conf_password),
+		estab_id = xssFilters.inHTMLData(req.body.school),
+		estab_password = xssFilters.inHTMLData(req.body.estab_password);
+
+	// Validating the Data
+	if (validator.isNull(firstname) || validator.isNull(lastname) || validator.isNull(email) || validator.isNull(password) || validator.isNull(password_conf) || validator.isNull(estab_id) || validator.isNull(estab_password)) {
+		res.json({
+			stat: 0,
+			message: "You must fill out all fields!"
+		});
+
+	} else if (!validator.isEmail(email)) {
+		res.json({
+			stat: 0,
+			message: "Invalid Email"
+		});
+
+	} else if (password != password_conf) {
+		res.json({
+			stat: 0,
+			message: "Passwords do not match"
+		});
+
+	} else if (!validator.isLength(password, vali_str_opt)) {
+        res.json({
+            stat: 0,
+            message: "Password must be longer than " + vali_str_opt.min + " characters"
+        });		
+
+	} else {
+
+		// Checking that the Email address hasn't already been used
+		db.query("SELECT std_users.stu_id FROM std_users WHERE std_users.stu_email = ?", email, function(err, rows, fields) {
+
+			// Checking for errors
+			if (err) throw err;
+
+			// Checking for data
+			if (rows.length < 1) {
+
+				// There's no data! Email is not taken - Checking whether the Establishment exists
+				db.query("SELECT establishments.estab_id FROM establishments WHERE establishments.estab_id = ? AND establishments.estab_pass = ?", [estab_id, estab_password], function(err, rows, fields) {
+
+					// Checking for errors
+					if (err) throw err;
+
+					// Checking Data
+					if (rows.length < 1) {
+
+						// There's no data, the password is wrong
+						res.json({
+							stat: 0,
+							message: "Password for your establishment is incorrect"
+						});
+
+					} else if (rows.length > 0) {
+
+						// There's data, the password is correct - register the user
+						// Creating the User model
+						var full_name = firstname + " " + lastname;
+
+						var user_model = {
+							stu_id: null,
+							stu_fname: firstname,
+							stu_lname: lastname,
+							stu_full_name: full_name,
+							stu_sign_date: null,
+							stu_estab: estab_id,
+							stu_email: email,
+							stu_pass: password
+						}
+
+						// Adding the User to the database
+						db.query("INSERT INTO std_users SET ?", user_model, function(err, result) {
+
+							// Checking for error
+							if (err) throw err;
+
+							// Checking if the addition was successfull
+							if (result.affectedRows > 0) {
+								// Success!
+								res.json({
+									stat: 1,
+									message: "You've successfully registered! <a href='/login'>Login</a>"
+								});
+							} else if (result.affectedRows < 1) {
+								// Failed
+								res.json({
+									stat: 0,
+									message: "There was a problem registering your account. Please try again later!"
+								});
+							}
+
+						});
+
+					}
+
+				});
+
+
+			} else if (rows.length > 0) {
+
+				// There's data, Email has been registered
+				res.json({
+					stat: 0,
+					message: "That Email is already in use. Please try another."
+				});
+
+			}
+
+		});
+
+	}
+
 });
 
 // Starting app
