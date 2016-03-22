@@ -35,7 +35,7 @@ app.use(expressSession({
     resave: true, 
     saveUninitialized: true,
     cookie: {
-        maxAge: 2592000000 * 12
+        maxAge: 2592000000 * 12 // ~ 1 Year
     },
     rolling: true 
 }));
@@ -300,35 +300,28 @@ app.post('/register', function(req, res) {
 
 });
 
-app.get('/tasks', function(req, res) {
+app.get('/tasks', ensureAuthenticationAPI, function(req, res) {
 
 	// Getting the User ID
 	var user_id = req.user.id;
 
 	// Getting info about the user
-	db.query('select tasks.id "task_id", tasks.task_name "task_name", tasks.task_desc "task_desc", classes.class_name "class_name", classes.id "class_id" from tasks, classes where tasks.class_id = classes.id and tasks.class_id in (select classes.id from classes where classes.id in (select relations.class_id from relations where relations.student_id in (select users.id from users where users.username like ?)))', username, function(err, result) {
+	db.query('select tasks.id "task_id", tasks.task_name "task_name", tasks.task_desc "task_desc", classes.class_name "class_name", classes.id "class_id" from tasks, classes where tasks.class_id = classes.id and tasks.class_id in (select classes.id from classes where classes.id in (select relations.class_id from relations where relations.student_id in (select std_users.stu_id from std_users where std_users.stu_id like ?)))', user_id, function(err, rows, fields) {
 
-		if (result.length > 0) {
-
-			// Looping through data
-			for (i = 0; i < result.length; i++) {
-				resp[i] = {
-					'class_name': result[i].class_name,
-					'task_name': result[i].task_name,
-					'task_desc': result[i].task_desc
-				}
-			}
+		if (rows.length > 0) {
 
 			res.json({
 				status: 1,
-				tasks: resp
+				tasks: rows
 			});
 
 		} else {
+
 			res.json({
 				status: 0,
 				warning: 'No tasks to get!'
 			});
+
 		}
 
 	});

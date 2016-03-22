@@ -4,7 +4,9 @@
 	<head>
 		<title><%= title %></title>
 	</head>
-	<body>
-		<h1></h1>
+	<body onload="get_tasks(task_table);">
+		<table class="table table-striped" style="font-size: 1em;" id="task_table">
+			<!-- Added via JS -->
+		</table>
 	</body>
 </html>

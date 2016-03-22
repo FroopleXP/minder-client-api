@@ -89,3 +89,24 @@ function get_estab_list (to_append) {
 
 	});
 } 
+
+function get_tasks(to_append) {
+
+	var sel_box = $(to_append),
+		html = "";
+
+	$.get('/tasks', function(data) {
+		
+		// Looping through the data
+		$(data.tasks).each(function(index) {
+			html += "<tr><td>";
+			html += "<b>" + data.tasks[index]['task_name'] + " - (" + data.tasks[index]['class_name'] + ")</b>";
+			html += "<p>" + data.tasks[index]['task_desc'] + "</p>";
+			html += "<small>Due by: ()</small></td></tr/>";
+		});
+
+		sel_box.html(html);
+
+	});
+
+}
