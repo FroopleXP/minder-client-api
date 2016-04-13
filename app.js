@@ -16,6 +16,9 @@ var vali_str_opt = {
     max: 100
 }
 
+// Favicon goodness
+var favicon = require('serve-favicon');
+
 var app = express();
 var port = process.env.PORT || 1337;
 
@@ -30,6 +33,7 @@ app.use("/views", express.static(__dirname + '/views'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+app.use(favicon(__dirname + '/favicon.ico'));
 app.use(expressSession({ 
 	secret: 'Th12i24p4InK1li3R',  
     resave: true, 

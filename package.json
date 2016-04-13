@@ -4,16 +4,17 @@
   "description": "Minder Client API",
   "main": "app.js",
   "dependencies": {
+    "body-parser": "~1.15.0",
     "cookie-parser": "^1.4.1",
+    "ejs": "~2.4.1",
     "express": "^4.13.4",
     "express-session": "^1.13.0",
+    "mysql": "~2.10.2",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
-    "body-parser": "~1.15.0",
-    "mysql": "~2.10.2",
-    "xss-filters": "~1.2.6",
+    "serve-favicon": "^2.3.0",
     "validator": "~5.1.0",
-    "ejs": "~2.4.1"
+    "xss-filters": "~1.2.6"
   },
   "devDependencies": {},
   "scripts": {
